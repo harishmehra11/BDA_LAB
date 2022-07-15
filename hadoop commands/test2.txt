@@ -1,0 +1,4 @@
+file 2
+It will print all the directories present in HDFS.
+ bin directory contains executables so, bin/hdfs means
+ we want the executables of hdfs particularly dfs(Distributed File System) commands.

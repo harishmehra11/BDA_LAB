@@ -1,0 +1,18 @@
+Hi, You are champ
+HOW TO INSTALL APACHE HADOOP 2.6.0 IN UBUNTU (SINGLE NODE SETUP)
+
+Since we know it’s the time for parallel computation to tackle large amount
+of dataset, we will require Apache Hadoop (here the name is derived from
+Elephant). As Apache Hadoop is the top most contributed Apache project,
+more and more features are implemented as well as more and more bugs are
+getting fixed in new coming versions. So, by considering this situation we
+need to follow slightly different steps than previous version. Here, I am
+trying to covering full fledge Hadoop installation steps for BigData
+enthusiasts who wish to install Apache Hadoop on their Ubuntu – Linux
+machine.
+
+This blog post teaches how to install Apache Hadoop 2.6 over Ubuntu
+machine. (You can follow the same blog post for installation over Ubuntu
+server machine). To get started with Apache Hadoop install, I recommend
+that you should have knowledge of basic Linux commands which will be
+helpful in normal operations while installation task.

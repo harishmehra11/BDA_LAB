@@ -1,0 +1,200 @@
+cqlsh> CREATE KEYSPACE bmsce_students WITH REPLICATION={ 'class':'SimpleStrategy', 'replication_factor':1};
+cqlsh> DESCRIBE KEYSPACES;
+
+"Students"     system_auth  bmsce_students      system_traces
+system_schema  system       system_distributed
+
+cqlsh> SELECT * FROM system_schema.keyspaces;
+
+ keyspace_name      | durable_writes | replication
+--------------------+----------------+-------------------------------------------------------------------------------------
+        system_auth |           True | {'class': 'org.apache.cassandra.locator.SimpleStrategy', 'replication_factor': '1'}
+      system_schema |           True |                             {'class': 'org.apache.cassandra.locator.LocalStrategy'}
+           Students |           True | {'class': 'org.apache.cassandra.locator.SimpleStrategy', 'replication_factor': '1'}
+     bmsce_students |           True | {'class': 'org.apache.cassandra.locator.SimpleStrategy', 'replication_factor': '1'}
+ system_distributed |           True | {'class': 'org.apache.cassandra.locator.SimpleStrategy', 'replication_factor': '3'}
+             system |           True |                             {'class': 'org.apache.cassandra.locator.LocalStrategy'}
+      system_traces |           True | {'class': 'org.apache.cassandra.locator.SimpleStrategy', 'replication_factor': '2'}
+
+(7 rows)
+cqlsh> USE bmsce_students;
+cqlsh:bmsce_students> create table Student_Info(Roll_no int PRIMARY KEY, Stud_Name text, Date_Of_Joining timestamp, Last_Exam_percent double);
+cqlsh:bmsce_students> DESCRIBE TABLE Student_Info;
+
+CREATE TABLE bmsce_students.student_info (
+    roll_no int PRIMARY KEY,
+    date_of_joining timestamp,
+    last_exam_percent double,
+    stud_name text
+) WITH bloom_filter_fp_chance = 0.01
+    AND caching = {'keys': 'ALL', 'rows_per_partition': 'NONE'}
+    AND comment = ''
+    AND compaction = {'class': 'org.apache.cassandra.db.compaction.SizeTieredCompactionStrategy', 'max_threshold': '32', 'min_threshold': '4'}
+    AND compression = {'chunk_length_in_kb': '64', 'class': 'org.apache.cassandra.io.compress.LZ4Compressor'}
+    AND crc_check_chance = 1.0
+    AND dclocal_read_repair_chance = 0.1
+    AND default_time_to_live = 0
+    AND gc_grace_seconds = 864000
+    AND max_index_interval = 2048
+    AND memtable_flush_period_in_ms = 0
+    AND min_index_interval = 128
+    AND read_repair_chance = 0.0
+    AND speculative_retry = '99PERCENTILE';
+
+cqlsh:bmsce_students> BEGIN BATCH
+                  ... INSERT INTO
+                  ... Student_Info(Roll_no, Stud_Name, Date_Of_Joining, Last_Exam_percent)
+                  ... VALUES (1,'ROHIT','2000-09-24',95)
+                  ... INSERT INTO Student_Info(Roll_no, Stud_Name, Date_Of_Joining, Last_Exam_percent)
+                  ... VALUES (2,'RAKS','1999-03-28',65)
+                  ... APPLY BATCH;
+cqlsh:bmsce_students> SELECT * FROM Student_Info;
+
+ roll_no | date_of_joining                 | last_exam_percent | stud_name
+---------+---------------------------------+-------------------+-----------
+       1 | 2000-09-23 18:30:00.000000+0000 |                95 |     ROHIT
+       2 | 1999-03-27 18:30:00.000000+0000 |                65 |      RAKS
+
+(2 rows)
+cqlsh:bmsce_students> SELECT * FROM student_Info;
+
+ roll_no | date_of_joining                 | last_exam_percent | stud_name
+---------+---------------------------------+-------------------+-----------
+       1 | 2000-09-23 18:30:00.000000+0000 |                95 |     ROHIT
+       2 | 1999-03-27 18:30:00.000000+0000 |                65 |      RAKS
+
+(2 rows)
+
+cqlsh:bmsce_students> UPDATE STUDENT_INFO SET STUD_NAME='SUO_ROHIT' WHERE ROLL_NO=1;
+cqlsh:bmsce_students> SELECT * FROM student_Info;
+
+ roll_no | date_of_joining                 | last_exam_percent | stud_name
+---------+---------------------------------+-------------------+-----------
+       1 | 2000-09-23 18:30:00.000000+0000 |                95 | SUO_ROHIT
+       2 | 1999-03-27 18:30:00.000000+0000 |                65 |      RAKS
+
+(2 rows)
+cqlsh:bmsce_students> UPDATE STUDENT_INFO SET STUD_NAME='SUO ROHIT' WHERE ROLL_NO=1;
+cqlsh:bmsce_students> SELECT * FROM student_Info;
+
+ roll_no | date_of_joining                 | last_exam_percent | stud_name
+---------+---------------------------------+-------------------+-----------
+       1 | 2000-09-23 18:30:00.000000+0000 |                95 | SUO ROHIT
+       2 | 1999-03-27 18:30:00.000000+0000 |                65 |      RAKS
+
+(2 rows)
+
+cqlsh:bmsce_students> SELECT DATE_OF_JOINING FROM STUDENT_INFO WHERE ROLL_NO IN (1,2,3);
+
+ date_of_joining
+---------------------------------
+ 2000-09-23 18:30:00.000000+0000
+ 1999-03-27 18:30:00.000000+0000
+
+(2 rows)
+cqlsh:bmsce_students> CREATE INDEX ON STUDENT_INFO(LAST_EXAM_PERCENT);
+cqlsh:bmsce_students> SELECT * FROM student_Info;
+
+ roll_no | date_of_joining                 | last_exam_percent | stud_name
+---------+---------------------------------+-------------------+-----------
+       1 | 2000-09-23 18:30:00.000000+0000 |                95 | SUO ROHIT
+       2 | 1999-03-27 18:30:00.000000+0000 |                65 |      RAKS
+
+(2 rows)
+cqlsh:bmsce_students> SELECT ROLL_NO FROM STUDENT_INFO WHERE LAST_EXAM_PERCENT=95;
+
+ roll_no
+---------
+       1
+
+(1 rows)
+
+cqlsh:bmsce_students> CREATE INDEX ON STUDENT_INFO(DATE_OF_JOINING);
+cqlsh:bmsce_students> SELECT * FROM STUDENT_INFO WHERE DATE_OF_JOINING='2000-09-23';
+
+ roll_no | date_of_joining | last_exam_percent | stud_name
+---------+-----------------+-------------------+-----------
+
+(0 rows)
+cqlsh:bmsce_students> SELECT * FROM STUDENT_INFO WHERE DATE_OF_JOINING='2000-09-23';
+
+ roll_no | date_of_joining | last_exam_percent | stud_name
+---------+-----------------+-------------------+-----------
+
+(0 rows)
+cqlsh:bmsce_students> SELECT * FROM STUDENT_INFO WHERE DATE_OF_JOINING='2000-09-23 18:30:00.000000+0000';
+
+ roll_no | date_of_joining                 | last_exam_percent | stud_name
+---------+---------------------------------+-------------------+-----------
+       1 | 2000-09-23 18:30:00.000000+0000 |                95 | SUO ROHIT
+
+(1 rows)
+
+cqlsh:bmsce_students> SELECT ROLL_NO, LAST_EXAM_PERCENT FROM STUDENT_INFO LIMIT 1;
+
+ roll_no | last_exam_percent
+---------+-------------------
+       1 |                95
+
+(1 rows)
+cqlsh:bmsce_students> SELECT ROLL_NO, LAST_EXAM_PERCENT AS EXAM_DETAILS FROM STUDENT_INFO LIMIT 1;
+
+ roll_no | exam_details
+---------+--------------
+       1 |           95
+
+(1 rows)
+cqlsh:bmsce_students> UPDATE STUDENT_INFO SET STUD_NAME='RAKESH', LAST_EXAM_PERCENT=99 WHERE ROLL_NO=2;
+cqlsh:bmsce_students> SELECT * FROM STUDENT_INFO WHERE ROLL_NO=2;
+
+ roll_no | date_of_joining                 | last_exam_percent | stud_name
+---------+---------------------------------+-------------------+-----------
+       2 | 1999-03-27 18:30:00.000000+0000 |                99 |    RAKESH
+
+(1 rows)
+cqlsh:bmsce_students> DELETE LAST_EXAM_PERCENT FROM STUDENT_INFO WHERE ROLL_NO=2;
+cqlsh:bmsce_students> SELECT * FROM STUDENT_INFO WHERE ROLL_NO=2;
+
+ roll_no | date_of_joining                 | last_exam_percent | stud_name
+---------+---------------------------------+-------------------+-----------
+       2 | 1999-03-27 18:30:00.000000+0000 |              null |    RAKESH
+
+(1 rows)
+cqlsh:bmsce_students> DELETE FROM STUDENT_INFO WHERE ROLL_NO=2;
+cqlsh:bmsce_students> SELECT * FROM STUDENT_INFO WHERE ROLL_NO=2;
+
+ roll_no | date_of_joining | last_exam_percent | stud_name
+---------+-----------------+-------------------+-----------
+
+(0 rows)
+
+cqlsh:bmsce_students> SELECT * FROM STUDENT_INFO;
+
+ roll_no | date_of_joining                 | last_exam_percent | stud_name
+---------+---------------------------------+-------------------+-----------
+       1 | 2000-09-23 18:30:00.000000+0000 |                95 | SUO ROHIT
+
+(1 rows)
+cqlsh:bmsce_students> SELECT * FROM STUDENT_INFO WHERE ROLL_NO=1;
+
+ roll_no | date_of_joining                 | last_exam_percent | stud_name
+---------+---------------------------------+-------------------+-----------
+       1 | 2000-09-23 18:30:00.000000+0000 |                95 | SUO ROHIT
+
+(1 rows)
+cqlsh:bmsce_students> SELECT * FROM STUDENT_INFO WHERE ROLL_NO=1;
+
+ roll_no | date_of_joining                 | last_exam_percent | stud_name
+---------+---------------------------------+-------------------+-----------
+       1 | 2000-09-23 18:30:00.000000+0000 |                95 | SUO ROHIT
+
+(1 rows)
+cqlsh:bmsce_students> DELETE FROM STUDENT_INFO WHERE ROLL_NO=1;
+cqlsh:bmsce_students> SELECT * FROM STUDENT_INFO;
+
+ roll_no | date_of_joining | last_exam_percent | stud_name
+---------+-----------------+-------------------+-----------
+
+(0 rows)
+cqlsh:bmsce_students> 
+
